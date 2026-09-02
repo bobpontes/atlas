@@ -164,7 +164,35 @@ Uma pessoa pode ser responsável, aluna ou exercer ambos os papéis.
 
 ---
 
-## 4.2 `relacionamentos_pessoa`
+## 4.2 `usuarios`
+
+### Objetivo
+
+Representar os usuários internos que operam o Atlas.
+
+Usuários são diferentes de `pessoas`: `pessoas` representam indivíduos envolvidos nos atendimentos comerciais, enquanto `usuarios` representam membros da equipe que utilizam o sistema para registrar e acompanhar as jornadas.
+
+### Estrutura
+
+| Coluna | Tipo | Nulo? | Chave | Descrição |
+|---|---|---:|---|---|
+| `usuario_id` | `UUID` | Não | PK | Identificador único |
+| `nome` | `VARCHAR(150)` | Não | | Nome do usuário |
+| `email` | `VARCHAR(254)` | Não | UNIQUE | E-mail de acesso |
+| `ativo` | `BOOLEAN` | Não | | Indica se o usuário está ativo |
+| `created_at` | `TIMESTAMPTZ` | Não | | Data de criação |
+| `updated_at` | `TIMESTAMPTZ` | Não | | Data da última atualização |
+
+### Regras
+
+- Um usuário representa uma pessoa que opera o Atlas.
+- Usuários não devem ser confundidos com participantes de uma jornada.
+- O usuário responsável pelo registro de uma interação ou atividade será referenciado por `usuario_id`.
+- Usuários inativos não devem ser apagados quando possuírem registros históricos.
+
+---
+
+## 4.3 `relacionamentos_pessoas`
 
 ### Objetivo
 
@@ -184,20 +212,20 @@ Carlliane
 |---|---|---:|---|---|
 | `pessoa_origem_id` | `UUID` | Não | PK/FK | Pessoa que origina a relação |
 | `pessoa_destino_id` | `UUID` | Não | PK/FK | Pessoa relacionada |
-| `tipo` | `VARCHAR(50)` | Não | PK | Tipo da relação |
+| `tipo_relacionamento` | `VARCHAR(50)` | Não | PK | Tipo da relação |
 | `created_at` | `TIMESTAMPTZ` | Não | | Data de criação |
 
 ### Restrições
 
 ```text
-PRIMARY KEY (pessoa_origem_id, pessoa_destino_id, tipo)
+PRIMARY KEY (pessoa_origem_id, pessoa_destino_id, tipo_relacionamento)
 ```
 
 As duas pessoas devem existir em `pessoas`.
 
 ---
 
-## 4.3 `jornadas`
+## 4.4 `jornadas`
 
 ### Objetivo
 
@@ -231,7 +259,7 @@ Representar um atendimento comercial específico.
 
 ---
 
-## 4.4 `jornada_pessoas`
+## 4.5 `jornada_pessoas`
 
 ### Objetivo
 
@@ -257,7 +285,7 @@ Uma pessoa pode ter mais de um papel na mesma jornada.
 
 ---
 
-## 4.5 `buyer_journey_opcoes`
+## 4.6 `buyer_journey_opcoes`
 
 ### Objetivo
 
@@ -278,7 +306,7 @@ As opções podem ser alteradas ou desativadas sem modificar a estrutura de `jor
 
 ---
 
-## 4.6 `investimento_opcoes`
+## 4.7 `investimento_opcoes`
 
 ### Objetivo
 
@@ -297,7 +325,7 @@ Armazenar as faixas de investimento utilizadas pelo formulário.
 
 ---
 
-## 4.7 `recuperacao_triagem_opcoes`
+## 4.8 `recuperacao_triagem_opcoes`
 
 ### Objetivo
 
@@ -316,7 +344,28 @@ Armazenar as opções apresentadas quando o lead indica não estar disposto a in
 
 ---
 
-## 4.8 `cursos`
+## 4.9 `motivos_perda`
+
+### Objetivo
+
+Armazenar os motivos disponíveis para o encerramento de uma jornada como perdida.
+
+Os motivos são dados configuráveis e podem ser adicionados, alterados ou desativados sem modificar a estrutura da tabela `jornadas`.
+
+### Estrutura
+
+| Coluna | Tipo | Nulo? | Chave | Descrição |
+|---|---|---:|---|---|
+| `id` | `UUID` | Não | PK | Identificador |
+| `descricao` | `VARCHAR(255)` | Não | | Texto do motivo |
+| `ativo` | `BOOLEAN` | Não | | Disponível para novos registros |
+| `ordem` | `INTEGER` | Não | | Ordem de exibição |
+| `created_at` | `TIMESTAMPTZ` | Não | | Criação |
+| `updated_at` | `TIMESTAMPTZ` | Não | | Atualização |
+
+---
+
+## 4.10 `cursos`
 
 ### Objetivo
 
@@ -337,7 +386,7 @@ Cursos antigos devem preferencialmente ser desativados, não apagados.
 
 ---
 
-## 4.9 `niveis`
+## 4.11 `niveis`
 
 ### Objetivo
 
@@ -363,7 +412,7 @@ CURSO 1:N NIVEIS
 
 ---
 
-## 4.10 `turmas`
+## 4.12 `turmas`
 
 ### Objetivo
 
@@ -382,7 +431,7 @@ Representar uma oferta concreta de um determinado nível.
 
 ---
 
-## 4.11 `horarios_turma`
+## 4.13 `horarios_turma`
 
 ### Objetivo
 
@@ -396,9 +445,9 @@ Uma turma pode ocorrer em mais de um dia por semana.
 |---|---|---:|---|---|
 | `id` | `UUID` | Não | PK | Identificador |
 | `turma_id` | `UUID` | Não | FK | Turma |
-| `dia_semana` | `SMALLINT` | Não | | 1 a 7 |
-| `hora_inicio` | `TIME` | Não | | Início |
-| `hora_fim` | `TIME` | Não | | Fim |
+| `week_day` | `SMALLINT` | Não | | 1 a 7 |
+| `start_time` | `TIME` | Não | | Início |
+| `end_time` | `TIME` | Não | | Fim |
 
 ### Convenção
 
@@ -415,13 +464,13 @@ Uma turma pode ocorrer em mais de um dia por semana.
 ### Restrições
 
 ```text
-dia_semana BETWEEN 1 AND 7
-hora_fim > hora_inicio
+week_day BETWEEN 1 AND 7
+end_time > start_time
 ```
 
 ---
 
-## 4.12 `jornada_cursos`
+## 4.14 `jornada_cursos`
 
 ### Objetivo
 
@@ -445,7 +494,7 @@ PRIMARY KEY (jornada_id, curso_id)
 
 ---
 
-## 4.13 `diagnosticos`
+## 4.15 `diagnosticos`
 
 ### Objetivo
 
@@ -457,7 +506,7 @@ O diagnóstico combina dados objetivos e observações livres.
 
 | Coluna | Tipo | Nulo? | Chave | Descrição |
 |---|---|---:|---|---|
-| `id` | `UUID` | Não | PK | Identificador |
+| `diagnostico_id` | `UUID` | Não | PK | Identificador |
 | `jornada_id` | `UUID` | Não | FK | Jornada |
 | `pessoa_id` | `UUID` | Não | FK | Aluno |
 | `escola` | `VARCHAR(200)` | Sim | | Escola |
@@ -471,7 +520,7 @@ O banco deverá garantir que o aluno do diagnóstico esteja associado à respect
 
 ---
 
-## 4.14 `periodos_estudo`
+## 4.16 `periodos_estudo`
 
 ### Objetivo
 
@@ -500,7 +549,7 @@ A lista pode ser expandida.
 
 ---
 
-## 4.15 `diagnostico_periodos_estudo`
+## 4.17 `diagnostico_periodos_estudo`
 
 ### Objetivo
 
@@ -521,7 +570,7 @@ PRIMARY KEY (diagnostico_id, periodo_estudo_id)
 
 ---
 
-## 4.16 `interacoes`
+## 4.18 `interacoes`
 
 ### Objetivo
 
@@ -533,22 +582,22 @@ Uma interação pode ser simples ou conter grande quantidade de informação.
 
 | Coluna | Tipo | Nulo? | Chave | Descrição |
 |---|---|---:|---|---|
-| `id` | `UUID` | Não | PK | Identificador |
+| `interacao_id` | `UUID` | Não | PK | Identificador |
 | `jornada_id` | `UUID` | Não | FK | Jornada |
 | `atividade_id` | `UUID` | Sim | FK | Atividade relacionada |
 | `tipo` | `VARCHAR(50)` | Não | | Tipo |
 | `subtipo` | `VARCHAR(50)` | Sim | | Subtipo |
 | `descricao` | `TEXT` | Não | | Registro |
 | `origem` | `VARCHAR(30)` | Não | | Origem |
-| `data_hora` | `TIMESTAMPTZ` | Não | | Momento |
-| `responsavel_id` | `UUID` | Sim | FK | Pessoa que registrou |
+| `data_interacao` | `TIMESTAMPTZ` | Não | | Momento |
+| `usuario_id` | `UUID` | Sim | FK | Pessoa que registrou |
 | `created_at` | `TIMESTAMPTZ` | Não | | Criação |
 
 A interação pode ser registrada manualmente, automaticamente ou com auxílio da IA.
 
 ---
 
-## 4.17 `atividades`
+## 4.19 `atividades`
 
 ### Objetivo
 
@@ -569,14 +618,14 @@ FM — Follow-up Mensal
 
 | Coluna | Tipo | Nulo? | Chave | Descrição |
 |---|---|---:|---|---|
-| `id` | `UUID` | Não | PK | Identificador |
+| `atividade_id` | `UUID` | Não | PK | Identificador |
 | `jornada_id` | `UUID` | Não | FK | Jornada |
 | `tipo` | `VARCHAR(10)` | Não | | Tipo |
 | `sequencia` | `SMALLINT` | Sim | | Número |
 | `descricao` | `TEXT` | Sim | | Detalhes |
 | `data_prevista` | `TIMESTAMPTZ` | Sim | | Prazo |
 | `status` | `VARCHAR(30)` | Não | | Estado |
-| `responsavel_id` | `UUID` | Sim | FK | Responsável |
+| `usuario_id` | `UUID` | Sim | FK | Responsável |
 | `atividade_anterior_id` | `UUID` | Sim | FK | Atividade anterior |
 | `created_at` | `TIMESTAMPTZ` | Não | | Criação |
 | `completed_at` | `TIMESTAMPTZ` | Sim | | Conclusão |
@@ -592,7 +641,7 @@ representa `FD3`.
 
 ---
 
-## 4.18 `compromissos`
+## 4.20 `compromissos`
 
 ### Objetivo
 
@@ -612,11 +661,11 @@ REUNIAO_MATRICULA
 
 | Coluna | Tipo | Nulo? | Chave | Descrição |
 |---|---|---:|---|---|
-| `id` | `UUID` | Não | PK | Identificador |
+| `compromisso_id` | `UUID` | Não | PK | Identificador |
 | `jornada_id` | `UUID` | Não | FK | Jornada |
 | `tipo` | `VARCHAR(30)` | Não | | Tipo |
-| `inicio` | `TIMESTAMPTZ` | Não | | Início |
-| `fim` | `TIMESTAMPTZ` | Sim | | Fim |
+| `start_time` | `TIMESTAMPTZ` | Não | | Início |
+| `end_time` | `TIMESTAMPTZ` | Sim | | Fim |
 | `status` | `VARCHAR(30)` | Não | | Estado |
 | `observacao` | `TEXT` | Sim | | Observações |
 | `calendar_event_id` | `VARCHAR(255)` | Sim | | ID externo |
