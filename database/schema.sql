@@ -243,7 +243,7 @@ CREATE TABLE atividades (
     completed_at TIMESTAMPTZ,
 
     FOREIGN KEY (jornada_id) REFERENCES jornadas(id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id),
     FOREIGN KEY (atividade_anterior_id) REFERENCES atividades(atividade_id)
 );
 
@@ -261,7 +261,7 @@ CREATE TABLE interacoes (
 
     FOREIGN KEY (jornada_id) REFERENCES jornadas(id),
     FOREIGN KEY (atividade_id) REFERENCES atividades(atividade_id),
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(usuario_id)
 );
 
 CREATE TABLE compromissos (
